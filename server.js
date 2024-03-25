@@ -1,7 +1,6 @@
 const ws = require('ws');
-const wsSec = require('wss');
-const http = require('http');
-const { verify } = require('crypto');
+const http = require('https');
+const fs = require("fs")
 
 const wss = new ws.Server({noServer: true});
 
@@ -16,8 +15,7 @@ function getClientId(ws) {
     return null;
 }
 
-function newUser(ws, message) {
-    let id = Math.floor(message.from);
+function newUser(ws, id) {
     let token = Math.random().toString(36).slice(2);
     clients[id] = {
         "ws": ws,
@@ -91,18 +89,23 @@ function handleMessage(ws, message) {
 
     switch(message.protocol) {
     case 'register':
-        newUser(ws, message);
+        if (message.from === null) { break; }
+        newUser(ws, message.from);
         break;
     case 'login':
+        if (message.id === null || message.token === null) { break; }
         login(message.id, message.token, ws);
         break;
     case 'deleteUser':
+        if (message.id === null || message.token === null) { break; }
         deleteUser(ws, message.from, message.token);
         break;
     case 'message':
+        if (message.token === null || message.message === null) { break; }
         onMessage(id, message.to, message.message);
         break;
     case 'changeUsername':
+        if (message.token === null || message.username === null) { break; }
         changeUsername(id, message.token, message.username);
         break;
     }
@@ -121,9 +124,11 @@ function onSocketConnect(ws) {
     });
 }
 
-http.createServer((req, res) => {
-    // here we only handle websocket connections
-    // in real project we'd have some other code here to handle non-websocket requests
+let options = {
+    key: fs.readFileSync("./pem/privkey.pem"),
+    cert: fs.readFileSync("./pem/fullchain.pem"),
+}
+
+server = http.createServer(options, (req, res) => {
     wss.handleUpgrade(req, req.socket, Buffer.alloc(0), onSocketConnect);
-    //wsSec.createServerFrom(http, onSocketConnect);
-}).listen(80);
+}).listen(25500);

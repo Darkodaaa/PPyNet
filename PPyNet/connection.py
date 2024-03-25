@@ -10,7 +10,7 @@ class Connection:
         self.__timeout = None
 
 
-        self.__ws = create_connection(self.__uri, timeout = self.__timeout, origin = "darkodaaa.one")
+        self.__ws = create_connection(self.__uri, timeout = self.__timeout)
 
         self.__ws.send(json.dumps({
             "protocol": "register",
@@ -29,6 +29,8 @@ class Connection:
             "token" : self.__token
         }))
         loginPacket = json.loads(self.__ws.recv())
+        if loginPacket["isSuccess"] == False:
+            ConnectionError("Failed to relogin. Did you edit your token or id?")
 
     def deleteUser(self):
         packet = json.dumps({
@@ -69,27 +71,3 @@ class Connection:
         except:
             self.__reLogin()
             self.receive()
-
-import threading
-
-username = input("Enter username: ")
-fid = int(input("Enter your id: "))
-to = int(input("Who do you want to chat with: "))
-
-conn = Connection(fid, username)
-
-def sending():
-    while True:
-        msg = input(username+": ")
-        if msg == "stopnow":
-            conn.deleteUser()
-            EOFError("Programs exited.")
-        conn.send(msg, to)
-
-def receiving():
-    while True:
-        msg = conn.receive()
-        print(msg["username"]+": "+msg["message"])
-
-threading.Thread(target=sending).start()
-threading.Thread(target=receiving).start()
