@@ -22,7 +22,10 @@ class Connection:
         self.__token = authPacket['token']
 
     def __reLogin(self):
-        self.__ws = create_connection(self.__uri, timeout = self.__timeout)
+        try:
+            self.__ws = create_connection(self.__uri, timeout = self.__timeout)
+        except:
+            ConnectionError("Server down.")
         self.__ws.send(json.dumps({
             "protocol": "login",
             "id" : self.__id,

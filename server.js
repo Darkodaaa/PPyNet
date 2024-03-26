@@ -4,9 +4,8 @@ const fs = require("fs")
 
 const wss = new ws.Server({noServer: true});
 
-//const clients = new Set();
-
 let clients = {}
+let userCleanUpTimeout = 60000
 
 function getClientId(ws) {
     for (let id in clients) {
@@ -15,12 +14,14 @@ function getClientId(ws) {
     return null;
 }
 
-function newUser(ws, id) {
+function newUser(ws, id, username) {
     let token = Math.random().toString(36).slice(2);
     clients[id] = {
         "ws": ws,
         "token": token,
-        "username": message.username,
+        "username": username,
+        "isLoggedin": true,
+        "timer": userCleanUpTimeout
     };
     ws.send(JSON.stringify({
         "protocol": "register",
@@ -38,6 +39,8 @@ function login(id, token, ws) {
             "ws": ws,
             "token": token,
             "username": client.username,
+            "isLoggedIn": true,
+            "timer": userCleanUpTimeout
         };
     }
     ws.send(JSON.stringify({
@@ -46,14 +49,14 @@ function login(id, token, ws) {
         "token": token,
         "isSuccess": isSuccess
     }));
-    console.log(`[Client login] id: ${id} token: ${token} isSuccess: ${isSuccess}`);
+    console.log(`[client login] id: ${id} token: ${token} isSuccess: ${isSuccess}`);
 }
 
 function deleteUser(ws, id, token) {
     let client = clients[id];
     if (client.token === token) {
         client = null;
-        console.log(`[Client delete] id: ${id} token: ${token}`);
+        console.log(`[client deleteion] id: ${id} token: ${token}`);
     }
 }
 
@@ -89,8 +92,8 @@ function handleMessage(ws, message) {
 
     switch(message.protocol) {
     case 'register':
-        if (message.from === null) { break; }
-        newUser(ws, message.from);
+        if (message.from === null || message.username === null) { break; }
+        newUser(ws, message.from, message.username);
         break;
     case 'login':
         if (message.id === null || message.token === null) { break; }
@@ -120,7 +123,15 @@ function onSocketConnect(ws) {
     });
 
     ws.on('close', function(event) {
-        console.log(`[client disconnect] id: ${getClientId(ws)} `);
+        let id = getClientId(ws);
+        console.log(`[client disconnect] id: ${id} `);
+        clients[id].isLoggedin = false;
+        setTimeout(function() {
+            if (clients[id].isLoggedIn) {
+                return;
+            }
+            clients[id] == null;
+        })
     });
 }
 
