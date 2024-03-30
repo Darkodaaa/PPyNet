@@ -21,7 +21,6 @@ function newUser(ws, id, username) {
         "token": token,
         "username": username,
         "isLoggedin": true,
-        "timer": userCleanUpTimeout
     };
     ws.send(JSON.stringify({
         "protocol": "register",
@@ -40,7 +39,6 @@ function login(id, token, ws) {
             "token": token,
             "username": client.username,
             "isLoggedIn": true,
-            "timer": userCleanUpTimeout
         };
     }
     ws.send(JSON.stringify({
@@ -56,7 +54,7 @@ function deleteUser(ws, id, token) {
     let client = clients[id];
     if (client.token === token) {
         client = null;
-        console.log(`[client deleteion] id: ${id} token: ${token}`);
+        console.log(`[client deletion] id: ${id} token: ${token}`);
     }
 }
 
@@ -130,8 +128,8 @@ function onSocketConnect(ws) {
             if (clients[id].isLoggedIn) {
                 return;
             }
-            clients[id] == null;
-        })
+            deleteUser(ws, id, clients[id].token);
+        }, userCleanUpTimeout)
     });
 }
 

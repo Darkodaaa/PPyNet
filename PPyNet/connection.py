@@ -1,16 +1,88 @@
+from .rawConnection import RawConnection
+
+class Connection:
+
+    def __init__(self, id, username):
+        self.__conn = RawConnection()
+        self.__id = str(id)
+        self.__username = username
+
+        self.__conn.send({
+            "protocol": "register",
+            "from": self.__id,
+            "username": self.__username,
+        })
+        
+        authPacket = self.__conn.receive()
+        self.__token = authPacket['token']
+
+    def __reLogin(self):
+        try:
+            self.__conn.reConnect()
+        except:
+            ConnectionError("Did you change the address? If not the server is probably down.")
+        self.__conn.send({
+            "protocol": "login",
+            "id" : self.__id,
+            "token" : self.__token
+        })
+        loginPacket = self.__conn.receive()
+        if loginPacket["isSuccess"] == False:
+            ConnectionError("Failed to relogin. Did you edit your token or id?")
+
+    def deleteUser(self):
+        packet = {
+            "protocol": "deleteUser",
+            "from" : self.__id,
+            "token": self.__token
+        }
+        try:
+            self.__conn.send(packet)
+        except:
+            self.__reLogin()
+            self.deleteUser()
+
+    def changeUserName(self, username):
+        self.__conn.send({
+            "protocol": "changeUsername",
+            "id" : self.__id,
+            "token" : self.__token,
+            "username" : username
+        })
+    
+    def send(self, message, to):
+        packet = {
+            "protocol": "message",
+            "from" : self.__id,
+            "to" : to,
+            "message" : message
+        }
+        try:
+            self.__conn.send(packet)
+        except:
+            self.__reLogin()
+            self.send(message, to)
+
+    def receive(self):
+        try:
+            data = self.__conn.receive()
+            return data if data else {}
+        except:
+            self.__reLogin()
+            self.receive()
+
+'''
 from websocket import create_connection
 import json
 
-class Connection:
+class Connection_old:
 
     def __init__(self, id, username):
         self.__uri = "wss://darkodaaa.one:25500"
         self.__id = str(id)
         self.__username = username
-        self.__timeout = None
 
-
-        self.__ws = create_connection(self.__uri, timeout = self.__timeout)
+        self.__ws = create_connection(self.__uri)
 
         self.__ws.send(json.dumps({
             "protocol": "register",
@@ -23,7 +95,7 @@ class Connection:
 
     def __reLogin(self):
         try:
-            self.__ws = create_connection(self.__uri, timeout = self.__timeout)
+            self.__ws = create_connection(self.__uri)
         except:
             ConnectionError("Server down.")
         self.__ws.send(json.dumps({
@@ -74,3 +146,5 @@ class Connection:
         except:
             self.__reLogin()
             self.receive()
+
+'''
