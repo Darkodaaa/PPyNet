@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 VERSION = '0.0.1'
-DESCRIPTION = 'An easy to use low level websocket based connection package.'
+DESCRIPTION = 'An easy to use low level websocket based utility package.'
 
 # Setting up
 setup(
@@ -12,7 +12,7 @@ setup(
     description=DESCRIPTION,
     packages=find_packages(),
     install_requires=['websocket'],
-    keywords=['python', 'sockets', 'connection'],
+    keywords=['python', 'sockets', 'connection', 'utility'],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",

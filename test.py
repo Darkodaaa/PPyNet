@@ -18,9 +18,7 @@ def sending():
 def receiving():
     while True:
         msg = conn.receive()
-        if type(msg) == "NoneType":
-            continue
         print(msg["username"]+": "+msg["message"])
-
+    
 threading.Thread(target=sending).start()
 threading.Thread(target=receiving).start()

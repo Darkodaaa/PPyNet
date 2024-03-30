@@ -124,11 +124,10 @@ function onSocketConnect(ws) {
         let id = getClientId(ws);
         console.log(`[client disconnect] id: ${id} `);
         clients[id].isLoggedin = false;
-        setTimeout(function() {
-            if (clients[id].isLoggedIn) {
-                return;
+        setTimeout(() => {
+            if (!clients[id].isLoggedIn) {
+                deleteUser(ws, id, clients[id].token);
             }
-            deleteUser(ws, id, clients[id].token);
         }, userCleanUpTimeout)
     });
 }

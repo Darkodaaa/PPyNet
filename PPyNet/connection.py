@@ -1,9 +1,9 @@
-from .rawConnection import RawConnection
+from .rawws import RawWs
 
 class Connection:
 
     def __init__(self, id, username):
-        self.__conn = RawConnection()
+        self.__conn = RawWs("connection")
         self.__id = str(id)
         self.__username = username
 
@@ -65,11 +65,10 @@ class Connection:
 
     def receive(self):
         try:
-            data = self.__conn.receive()
-            return data if data else {}
+            return self.__conn.receive()
         except:
             self.__reLogin()
-            self.receive()
+            return self.receive()
 
 '''
 from websocket import create_connection
