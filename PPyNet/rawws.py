@@ -1,10 +1,10 @@
-from websocket import create_connection
+from websockets.sync.client import connect as create_connection
 import json
 
 class RawWs:
 
     def __init__(self, protocol):
-        self.__uri = "wss://darkodaaa.one:25500"
+        self.__uri = "wss://ppynet.darkodaaa.one"
         self.__protocol = protocol
         self.__ws = create_connection(self.__uri)
 
@@ -13,13 +13,15 @@ class RawWs:
             self.__ws = create_connection(self.__uri)
             return True
         except:
-            raise ConnectionError("Can't connect to the server is still it running?")
+            raise ConnectionError("Can't connect to the server, is still it running?")
             
-    def send(self, data):
+    def send(self, protocol, data):
+        data["protocol"] = self.__protocol
+        data["subProtocol"] = protocol
         try:
             return self.__ws.send(json.dumps(data))
         except:
-            raise ConnectionError("Sending failed is the server down?")
+            raise ConnectionError("Sending failed. Is the server down?")
         
     def receive(self):
         try:

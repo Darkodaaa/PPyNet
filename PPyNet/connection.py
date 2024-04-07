@@ -7,8 +7,7 @@ class Connection:
         self.__id = str(id)
         self.__username = username
 
-        self.__conn.send({
-            "protocol": "register",
+        self.__conn.send("register",{
             "from": self.__id,
             "username": self.__username,
         })
@@ -20,45 +19,42 @@ class Connection:
         try:
             self.__conn.reConnect()
         except:
-            ConnectionError("Did you change the address? If not the server is probably down.")
-        self.__conn.send({
-            "protocol": "login",
+            raise ConnectionError("Did you change the address? If not the server is probably down.")
+        self.__conn.send("login", {
             "id" : self.__id,
             "token" : self.__token
         })
         loginPacket = self.__conn.receive()
         if loginPacket["isSuccess"] == False:
-            ConnectionError("Failed to relogin. Did you edit your token or id?")
+            raise ConnectionError("Failed to relogin. Did you edit your token or id?")
 
     def deleteUser(self):
         packet = {
-            "protocol": "deleteUser",
             "from" : self.__id,
             "token": self.__token
         }
         try:
-            self.__conn.send(packet)
+            self.__conn.send("deleteUser", packet)
         except:
             self.__reLogin()
             self.deleteUser()
 
     def changeUserName(self, username):
-        self.__conn.send({
-            "protocol": "changeUsername",
+        self.__conn.send("changeUsername", {
             "id" : self.__id,
             "token" : self.__token,
             "username" : username
         })
+        self.__username = username
     
     def send(self, message, to):
         packet = {
-            "protocol": "message",
             "from" : self.__id,
             "to" : to,
             "message" : message
         }
         try:
-            self.__conn.send(packet)
+            self.__conn.send("message", packet)
         except:
             self.__reLogin()
             self.send(message, to)

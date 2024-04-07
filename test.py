@@ -10,9 +10,9 @@ conn = Connection(fid, username)
 def sending():
     while True:
         msg = input(username+": ")
-        if msg == "stopnow":
-            conn.deleteUser()
-            exit()
+        if msg == "usr":
+            conn.changeUserName(input("New username: "))
+            continue
         conn.send(msg, to)
 
 def receiving():
