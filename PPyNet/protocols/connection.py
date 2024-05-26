@@ -1,11 +1,43 @@
-from .rawws import RawWs
+from ..rawws import RawWs
+import random
 
 class Connection:
+    """
+        A class for creating a simple connection. 
 
-    def __init__(self, id: int, username: str) -> None:
+        Properties:
+            id: The id (str) of the client. Defined at construction. Set and used only internally.
+            username: The username (str) of the client. Defined at construction. Has a getter and setter.
+            token: The token (str) of the client. Given by the server at construction. Only used internally.
+        
+        Methods:
+            init: Initializes the connection with a given id and username.
+            deleteUser: Deletes the user from the server.
+            changeUsername: Changes the username of the current session.
+            send: Sends a message (str) to a specified client by id (int).
+            recive: Recives a message (dict) with the username, id and message (str) of the sender.
+    """
+    def __init__(self, id: int = None, username: str = "") -> None:
+        """
+            Construct a new connection.
+
+            Params:
+                id: Number the id is what represents this session and where others can send messages.
+                    If it cannot be converted to a string it defaults to to a random 6 digit integer.
+                username: String an extra property that is given to the user you send a message to.
+                    Defaults to the given or generated id and converts it into a string.
+
+            Raises:
+                ConnectionError: When it can't connect to the server.
+                ValueError: When the id provided is already in use.
+            
+            Returns: New instance of the Connection class.
+        """
         self.__conn = RawWs("connection")
-        self.__id = str(id)
-        self.__username = username
+        try: self.__id = str(id)
+        except: self.__id = str(random.randint(100000, 999999))
+        if username == "": self.__username = self.__id
+        else: self.__username = username
 
         self.__conn.send("register",{
             "from": self.__id,
@@ -13,7 +45,10 @@ class Connection:
         })
         
         authPacket = self.__conn.receive()
-        self.__token = authPacket['token']
+        if authPacket["isSuccess"]:
+            self.__token = authPacket['token']
+        else:
+            ValueError("Invalid id: %s. It's already in use." % self.__id)
 
     def __reLogin(self) -> None:
         """
@@ -76,7 +111,8 @@ class Connection:
         })
         self.__username = username
 
-    def getUsername(self) -> str:
+    @property
+    def username(self) -> str:
         """
             Returns the username (str) stored in the current session.
 
@@ -84,6 +120,38 @@ class Connection:
         """
         return self.__username
     
+    @username.setter
+    def username(self, username: str) -> None:
+        """
+            Changes the user name of the user. \n
+            The happens on the server side and the client side.
+
+            Params:
+                username: The username to change to.
+            
+            Raises:
+                ConnectionError: When the server isn't available.
+
+            Returns: None
+        """
+        self.changeUsername(username)
+    
+    @property
+    def id(self):
+        """
+            Returns the id (str) stored in the current session.
+
+            Returns: String the current id of the client. 
+        """
+        return self.__id
+    
+    @id.setter
+    def id(self, value):
+        """
+            Your id cannot be changed as of right now.\n
+            It can be if you access the property, but don\'t do that.
+        """
+
     def send(self, message: str, to: int, retry = True) -> None:
         """
             Sends a message to the client with the given id.

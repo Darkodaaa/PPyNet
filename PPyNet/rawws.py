@@ -22,7 +22,7 @@ class RawWs:
         try:
             self.__ws = create_connection(self.__uri)
         except:
-            ConnectionError("Couldn't create to server. Is the server down?")
+            raise ConnectionError("Couldn't create to server. Is the server down?")
 
     def reConnect(self) -> None:
         """
@@ -62,9 +62,9 @@ class RawWs:
         except:
             raise ConnectionError("Sending failed. Is the server down?")
         
-    def receive(self):
+    def receive(self) -> dict:
         """
-            Receive a raw json message from the server and converts it into a dictionary.
+            Receives a raw json message from the server and converts it into a dictionary.
 
             Raises:
                 ConnectionError: When the connection to the server is closed.
@@ -75,4 +75,22 @@ class RawWs:
         try:
             return json.loads(self.__ws.recv())
         except:
-            raise ConnectionError("Receive failed, is the server down?")
+            raise ConnectionError("Receive failed. Is the server down?")
+        
+    def request(self, protocol: str, data: dict) -> dict:
+        """
+            Sends a request to the server in a form of send with a protocol and payload.
+            It returns the data recieved right after sending the payload.
+
+            Params:
+                protocol: String the subprotocol to use for the server to handle.
+                data: Dict a dictionary containing all data that is needed for the server to process the given protocol and subprotocol.
+            
+            Raises:
+                ConnectionError: When the connection to the server is closed.
+
+            Returns: Dict the dictionary containing the data sent by the server.
+        """
+        
+        self.send(protocol, data)
+        return self.receive()
