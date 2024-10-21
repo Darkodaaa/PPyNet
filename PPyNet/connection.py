@@ -148,7 +148,7 @@ class Connection:
     @id.setter
     def id(self, value):
         """
-            Your id cannot be changed as of right now.\n
+            Your id cannot be changed as of right now.
             It can be if you access the property, but don\'t do that.
         """
 
